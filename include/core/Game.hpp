@@ -29,6 +29,8 @@ public:
     StateStack& stateStack() { return states; }
     InputMapper& input() { return inputMapper; }
 
+    void applyAudioSettings();
+
     void quit() { shouldQuit = true; }
 
 private:

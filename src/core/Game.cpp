@@ -100,10 +100,14 @@ void Game::setupWindow()
 {
     const auto res = config.resolution();
     #if SFML_VERSION_MAJOR >= 3
-    sf::VideoMode mode(sf::Vector2u(res.x, res.y));
-    auto style = sf::Style::Default;
+    sf::VideoMode mode;
+    if (config.fullscreen())
+        mode = sf::VideoMode::getDesktopMode();
+    else
+        mode = sf::VideoMode(sf::Vector2u(res.x, res.y));
+    auto style = config.fullscreen() ? sf::Style::Fullscreen : sf::Style::Default;
     #else
-    sf::VideoMode mode(res.x, res.y);
+    sf::VideoMode mode = config.fullscreen() ? sf::VideoMode::getDesktopMode() : sf::VideoMode(res.x, res.y);
     sf::Uint32 style = config.fullscreen() ? sf::Style::Fullscreen : sf::Style::Close;
     #endif
     window.create(mode, "Space Shooter", style);
@@ -117,7 +121,9 @@ void Game::loadDefaults()
     if (!config.load(SETTINGS_PATH))
     {
         // Apply sane defaults
-        config.setResolution({1280, 720});
+        auto desktop = sf::VideoMode::getDesktopMode();
+        config.setResolution({desktop.width, desktop.height});
+        config.setFullscreen(true);
         config.setVsync(true);
         config.setMaxFps(60);
         config.setMusicVolume(60.f);
@@ -130,4 +136,9 @@ void Game::loadDefaults()
         config.setKeyBinding(sf::Keyboard::Key::Escape, "Pause");
         config.save(SETTINGS_PATH);
     }
+}
+
+void Game::applyAudioSettings()
+{
+    music.setVolume(config.musicVolume());
 }

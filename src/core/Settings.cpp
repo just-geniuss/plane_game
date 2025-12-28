@@ -25,6 +25,26 @@ std::string keyToString(sf::Keyboard::Key key)
     }
     return "Unknown";
 }
+
+Difficulty parseDifficulty(const std::string& v)
+{
+    if (v == "medium") return Difficulty::Medium;
+    if (v == "hard") return Difficulty::Hard;
+    if (v == "legend") return Difficulty::Legend;
+    return Difficulty::Easy;
+}
+
+std::string difficultyToString(Difficulty d)
+{
+    switch (d)
+    {
+    case Difficulty::Medium: return "medium";
+    case Difficulty::Hard: return "hard";
+    case Difficulty::Legend: return "legend";
+    case Difficulty::Easy:
+    default: return "easy";
+    }
+}
 }
 
 bool Settings::load(const std::string& filename)
@@ -76,6 +96,10 @@ bool Settings::load(const std::string& filename)
         {
             sfxVol = std::stof(value);
         }
+        else if (key == "difficulty")
+        {
+            difficultyLevel = parseDifficulty(value);
+        }
         else if (key.rfind("key_", 0) == 0)
         {
             std::string action = key.substr(4);
@@ -101,6 +125,7 @@ bool Settings::save(const std::string& filename) const
     out << "max_fps=" << framerateLimit << "\n";
     out << "music_volume=" << musicVol << "\n";
     out << "sfx_volume=" << sfxVol << "\n";
+    out << "difficulty=" << difficultyToString(difficultyLevel) << "\n";
 
     for (const auto& kv : keyBindings)
     {

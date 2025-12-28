@@ -12,6 +12,8 @@ public:
     void setText(const std::string& text, const sf::Font* font, unsigned int size = 24);
     void setPosition(const sf::Vector2f& pos);
     void setCallback(std::function<void()> cb);
+    void setFillColor(const sf::Color& c);
+    void setOutlineColor(const sf::Color& c);
 
     void handleEvent(const sf::Event& event, const sf::RenderWindow& window);
     void draw(sf::RenderTarget& target) const;

@@ -7,6 +7,14 @@
 
 // Basic settings container that loads/saves key-value pairs from a simple ini-like file.
 
+enum class Difficulty
+{
+    Easy,
+    Medium,
+    Hard,
+    Legend
+};
+
 class Settings
 {
 public:
@@ -31,6 +39,9 @@ public:
     float sfxVolume() const { return sfxVol; }
     void setSfxVolume(float v) { sfxVol = v; }
 
+    Difficulty difficulty() const { return difficultyLevel; }
+    void setDifficulty(Difficulty d) { difficultyLevel = d; }
+
     const std::unordered_map<sf::Keyboard::Key, std::string>& keymap() const { return keyBindings; }
     void setKeyBinding(sf::Keyboard::Key key, const std::string& action);
     std::string actionForKey(sf::Keyboard::Key key) const;
@@ -42,5 +53,6 @@ private:
     unsigned int framerateLimit{60};
     float musicVol{60.f};
     float sfxVol{70.f};
+    Difficulty difficultyLevel{Difficulty::Easy};
     std::unordered_map<sf::Keyboard::Key, std::string> keyBindings;
 };

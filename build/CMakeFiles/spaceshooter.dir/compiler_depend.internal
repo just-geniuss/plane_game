@@ -7784,6 +7784,7 @@ CMakeFiles/spaceshooter.dir/src/game/WaveSystem.cpp.o
  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/xlocale/_time.h
  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/xlocale/_wchar.h
  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/xlocale/_wctype.h
+ /Users/artempervyh/cpp_project_plane/include/core/Settings.hpp
  /Users/artempervyh/cpp_project_plane/include/game/Enemy.hpp
  /Users/artempervyh/cpp_project_plane/include/game/Entity.hpp
  /Users/artempervyh/cpp_project_plane/include/game/WaveSystem.hpp

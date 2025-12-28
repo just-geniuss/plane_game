@@ -876,6 +876,7 @@ CMakeFiles/spaceshooter.dir/src/states/GameplayState.cpp.o: \
   /Users/artempervyh/cpp_project_plane/include/game/PowerUp.hpp \
   /Users/artempervyh/cpp_project_plane/include/game/Explosion.hpp \
   /Users/artempervyh/cpp_project_plane/include/game/WaveSystem.hpp \
+  /Users/artempervyh/cpp_project_plane/include/core/Settings.hpp \
   /Users/artempervyh/cpp_project_plane/include/ui/HUD.hpp \
   /Users/artempervyh/cpp_project_plane/include/systems/HighScoreSystem.hpp \
   /Users/artempervyh/cpp_project_plane/include/core/Game.hpp \
@@ -898,7 +899,6 @@ CMakeFiles/spaceshooter.dir/src/states/GameplayState.cpp.o: \
   /opt/homebrew/opt/sfml@2/include/SFML/Audio/SoundFileReader.hpp \
   /opt/homebrew/opt/sfml@2/include/SFML/Audio/SoundFileWriter.hpp \
   /Users/artempervyh/cpp_project_plane/include/core/ResourceManager.hpp \
-  /Users/artempervyh/cpp_project_plane/include/core/Settings.hpp \
   /Users/artempervyh/cpp_project_plane/include/core/Input.hpp \
   /Users/artempervyh/cpp_project_plane/include/states/StateStack.hpp \
   /Users/artempervyh/cpp_project_plane/include/states/PauseState.hpp \

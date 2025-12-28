@@ -14,7 +14,7 @@ enum class EnemyType
 class Enemy : public Entity
 {
 public:
-    Enemy(EnemyType type, const sf::Vector2f& pos);
+    Enemy(EnemyType type, const sf::Vector2f& pos, float sizeScale = 1.f);
 
     void update(float dt) override;
     void draw(sf::RenderTarget& target) override;

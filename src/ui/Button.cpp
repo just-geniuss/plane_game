@@ -55,6 +55,16 @@ void Button::setCallback(std::function<void()> cb)
     callback = std::move(cb);
 }
 
+void Button::setFillColor(const sf::Color& c)
+{
+    box.setFillColor(c);
+}
+
+void Button::setOutlineColor(const sf::Color& c)
+{
+    box.setOutlineColor(c);
+}
+
 void Button::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
 {
     #if SFML_VERSION_MAJOR >= 3

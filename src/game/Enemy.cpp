@@ -8,7 +8,7 @@ sf::Texture Enemy::texture1;
 sf::Texture Enemy::texture2;
 sf::Texture Enemy::textureBoss;
 
-Enemy::Enemy(EnemyType t, const sf::Vector2f& pos) : enemyType(t)
+Enemy::Enemy(EnemyType t, const sf::Vector2f& pos, float sizeScale) : enemyType(t)
 {
     position = pos;
     switch (enemyType)
@@ -42,7 +42,8 @@ Enemy::Enemy(EnemyType t, const sf::Vector2f& pos) : enemyType(t)
         shape.setFillColor(sf::Color(120, 40, 200));
         break;
     }
-    baseSize = size;
+    baseSize = size * sizeScale;
+    size = baseSize;
     shape.setSize(size);
     shape.setOrigin(size * 0.5f);
     shape.setPosition(position);

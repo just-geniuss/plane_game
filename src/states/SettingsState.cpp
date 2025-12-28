@@ -16,12 +16,17 @@ SettingsState::SettingsState(Game& g) : GameState(g)
 
     float x = g.getWindow().getSize().x * 0.5f;
     float y = g.getWindow().getSize().y * 0.35f;
-    buttons.resize(4);
-    std::vector<std::string> labels = {"Toggle VSync", "Music Volume +", "Music Volume -", "Back"};
+    buttons.resize(5);
+    std::vector<std::string> labels = {
+        "Toggle VSync",
+        "Music +",
+        "Music -",
+        "Difficulty",
+        "Back"};
     for (std::size_t i = 0; i < buttons.size(); ++i)
     {
-        buttons[i].setPosition({x, y + 60.f * static_cast<float>(i)});
-        buttons[i].setSize({260.f, 44.f});
+        buttons[i].setPosition({x, y + 56.f * static_cast<float>(i)});
+        buttons[i].setSize({280.f, 44.f});
         buttons[i].setText(labels[i], font, 22);
     }
 
@@ -35,16 +40,32 @@ SettingsState::SettingsState(Game& g) : GameState(g)
     buttons[1].setCallback([this]() {
         auto& s = game.settings();
         s.setMusicVolume(std::min(100.f, s.musicVolume() + 5.f));
+        game.applyAudioSettings();
         refreshTexts();
         s.save(SETTINGS_PATH);
     });
     buttons[2].setCallback([this]() {
         auto& s = game.settings();
         s.setMusicVolume(std::max(0.f, s.musicVolume() - 5.f));
+        game.applyAudioSettings();
         refreshTexts();
         s.save(SETTINGS_PATH);
     });
     buttons[3].setCallback([this]() {
+        auto& s = game.settings();
+        Difficulty next = Difficulty::Easy;
+        switch (s.difficulty())
+        {
+        case Difficulty::Easy: next = Difficulty::Medium; break;
+        case Difficulty::Medium: next = Difficulty::Hard; break;
+        case Difficulty::Hard: next = Difficulty::Legend; break;
+        case Difficulty::Legend: next = Difficulty::Easy; break;
+        }
+        s.setDifficulty(next);
+        refreshTexts();
+        s.save(SETTINGS_PATH);
+    });
+    buttons[4].setCallback([this]() {
         game.stateStack().pop();
     });
 
@@ -76,14 +97,31 @@ SettingsState::SettingsState(Game& g) : GameState(g)
 void SettingsState::refreshTexts()
 {
     std::ostringstream oss;
-    oss << "VSync: " << (game.settings().vsync() ? "On" : "Off") << "\n";
-    oss << "Music volume: " << static_cast<int>(game.settings().musicVolume()) << "%" << "\n";
 #if SFML_VERSION_MAJOR >= 3
     if (details)
         details->setString(oss.str());
 #else
     details.setString(oss.str());
 #endif
+
+    // Highlight VSync button instead of textual status
+    const sf::Color onColor(60, 140, 80);
+    const sf::Color offColor(40, 60, 90);
+    buttons[0].setFillColor(game.settings().vsync() ? onColor : offColor);
+
+    // Update difficulty button label
+    const sf::Font* font = nullptr;
+    if (game.fonts().contains("default"))
+        font = &game.fonts().get("default");
+    std::string diffLabel = "Difficulty: ";
+    switch (game.settings().difficulty())
+    {
+    case Difficulty::Easy: diffLabel += "Easy"; break;
+    case Difficulty::Medium: diffLabel += "Medium"; break;
+    case Difficulty::Hard: diffLabel += "Hard"; break;
+    case Difficulty::Legend: diffLabel += "Legend"; break;
+    }
+    buttons[3].setText(diffLabel, font, 22);
 }
 
 void SettingsState::handleEvent(const sf::Event& event)

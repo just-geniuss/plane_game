@@ -19,6 +19,7 @@ GameplayState::GameplayState(Game& g) : GameState(g)
     player.setPosition({static_cast<float>(g.getWindow().getSize().x) * 0.5f, static_cast<float>(g.getWindow().getSize().y) - 80.f});
     hud.setFont(g.fonts().contains("default") ? &g.fonts().get("default") : nullptr);
     highscores.load(HIGHSCORE_PATH);
+    waves.setDifficulty(g.settings().difficulty());
 }
 
 void GameplayState::handleEvent(const sf::Event& event)
