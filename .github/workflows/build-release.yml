@@ -18,7 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            archive: spaceshooter-linux.tar.gz
+          - os: macos-latest
+            archive: spaceshooter-macos.tar.gz
 
     steps:
       - name: Checkout
@@ -55,28 +59,30 @@ jobs:
       - name: Package artifacts (Linux)
         if: runner.os == 'Linux'
         run: |
-          mkdir -p dist/linux
-          cp "$BUILD_DIR"/spaceshooter dist/linux/
-          cp /usr/lib/x86_64-linux-gnu/libsfml*.so* dist/linux/ || true
-          tar -C dist/linux -czf dist/spaceshooter-linux.tar.gz .
+          mkdir -p dist/linux/spaceshooter
+          cp "$BUILD_DIR"/spaceshooter dist/linux/spaceshooter/
+          cp -r assets dist/linux/spaceshooter/
+          cp /usr/lib/x86_64-linux-gnu/libsfml*.so.2.6* dist/linux/spaceshooter/ || true
+          tar -C dist/linux -czf "dist/${{ matrix.archive }}" spaceshooter
 
       - name: Package artifacts (macOS)
         if: runner.os == 'macOS'
         run: |
-          mkdir -p dist/macos
-          cp "$BUILD_DIR"/spaceshooter dist/macos/
+          mkdir -p dist/macos/spaceshooter
+          cp "$BUILD_DIR"/spaceshooter dist/macos/spaceshooter/
+          cp -r assets dist/macos/spaceshooter/
           brew_prefix=$(brew --prefix sfml@2)
-          cp "$brew_prefix"/lib/libsfml*.dylib dist/macos/ || true
-          tar -C dist/macos -czf dist/spaceshooter-macos.tar.gz .
+          cp "$brew_prefix"/lib/libsfml*.dylib dist/macos/spaceshooter/ || true
+          tar -C dist/macos -czf "dist/${{ matrix.archive }}" spaceshooter
 
       - name: Upload artifact (tar)
         uses: actions/upload-artifact@v4
         with:
           name: spaceshooter-${{ matrix.os }}
-          path: dist/*.tar.gz
+          path: dist/${{ matrix.archive }}
 
       - name: Upload to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.tar.gz
+          files: dist/${{ matrix.archive }}
