@@ -15,15 +15,31 @@ HighScoreState::HighScoreState(Game& g) : GameState(g)
 
     highScores.load(HIGHSCORE_PATH);
 
+#if SFML_VERSION_MAJOR >= 3
+    if (font)
+    {
+        title.emplace(*font, "High Scores", 32);
+        title->setPosition({40.f, 30.f});
+    }
+#else
     if (font)
         title.setFont(*font);
     title.setString("High Scores");
     title.setCharacterSize(32);
     title.setPosition({40.f, 30.f});
+#endif
 
     float y = 90.f;
     for (const auto& entry : highScores.entries())
     {
+#if SFML_VERSION_MAJOR >= 3
+        if (font)
+        {
+            sf::Text text(*font, entry.name + " - " + std::to_string(entry.score), 20);
+            text.setPosition({60.f, y});
+            rows.push_back(text);
+        }
+#else
         sf::Text text;
         if (font)
             text.setFont(*font);
@@ -31,6 +47,7 @@ HighScoreState::HighScoreState(Game& g) : GameState(g)
         text.setPosition({60.f, y});
         text.setString(entry.name + " - " + std::to_string(entry.score));
         rows.push_back(text);
+#endif
         y += 32.f;
     }
 
@@ -51,6 +68,14 @@ void HighScoreState::update(float)
 
 void HighScoreState::draw(sf::RenderTarget& target)
 {
+#if SFML_VERSION_MAJOR >= 3
+    if (title)
+        target.draw(*title);
+    for (auto& r : rows)
+    {
+        target.draw(r);
+    }
+#else
     if (title.getFont())
         target.draw(title);
     for (auto& r : rows)
@@ -58,5 +83,6 @@ void HighScoreState::draw(sf::RenderTarget& target)
         if (r.getFont())
             target.draw(r);
     }
+#endif
     backButton.draw(target);
 }

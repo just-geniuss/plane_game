@@ -3,6 +3,7 @@
 #include "states/GameState.hpp"
 #include "systems/HighScoreSystem.hpp"
 #include "ui/Button.hpp"
+#include <optional>
 
 class HighScoreState : public GameState
 {
@@ -16,6 +17,10 @@ public:
 private:
     HighScoreSystem highScores;
     Button backButton;
+#if SFML_VERSION_MAJOR >= 3
+    std::optional<sf::Text> title;
+#else
     sf::Text title;
+#endif
     std::vector<sf::Text> rows;
 };

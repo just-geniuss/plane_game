@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <functional>
 #include <string>
+#include <optional>
 
 class Button
 {
@@ -19,6 +20,10 @@ public:
 
 private:
     sf::RectangleShape box;
+#if SFML_VERSION_MAJOR >= 3
+    std::optional<sf::Text> label;
+#else
     sf::Text label;
+#endif
     std::function<void()> callback;
 };

@@ -3,6 +3,7 @@
 #include "states/GameState.hpp"
 #include "ui/Button.hpp"
 #include <vector>
+#include <optional>
 
 class PauseState : public GameState
 {
@@ -15,5 +16,9 @@ public:
 
 private:
     std::vector<Button> buttons;
+#if SFML_VERSION_MAJOR >= 3
+    std::optional<sf::Text> title;
+#else
     sf::Text title;
+#endif
 };

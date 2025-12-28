@@ -48,6 +48,16 @@ SettingsState::SettingsState(Game& g) : GameState(g)
         game.stateStack().pop();
     });
 
+#if SFML_VERSION_MAJOR >= 3
+    if (font)
+    {
+        title.emplace(*font, "Settings", 32);
+        title->setPosition({x - 60.f, y - 80.f});
+
+        details.emplace(*font, "", 18);
+        details->setPosition({x - 120.f, y - 40.f});
+    }
+#else
     if (font)
     {
         title.setFont(*font);
@@ -59,6 +69,7 @@ SettingsState::SettingsState(Game& g) : GameState(g)
 
     details.setCharacterSize(18);
     details.setPosition({x - 120.f, y - 40.f});
+#endif
     refreshTexts();
 }
 
@@ -67,7 +78,12 @@ void SettingsState::refreshTexts()
     std::ostringstream oss;
     oss << "VSync: " << (game.settings().vsync() ? "On" : "Off") << "\n";
     oss << "Music volume: " << static_cast<int>(game.settings().musicVolume()) << "%" << "\n";
+#if SFML_VERSION_MAJOR >= 3
+    if (details)
+        details->setString(oss.str());
+#else
     details.setString(oss.str());
+#endif
 }
 
 void SettingsState::handleEvent(const sf::Event& event)
@@ -82,10 +98,17 @@ void SettingsState::update(float)
 
 void SettingsState::draw(sf::RenderTarget& target)
 {
+#if SFML_VERSION_MAJOR >= 3
+    if (title)
+        target.draw(*title);
+    if (details)
+        target.draw(*details);
+#else
     if (title.getFont())
         target.draw(title);
     if (details.getFont())
         target.draw(details);
+#endif
     for (auto& b : buttons)
         b.draw(target);
 }

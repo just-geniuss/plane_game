@@ -12,11 +12,19 @@ PauseState::PauseState(Game& g) : GameState(g)
     if (g.fonts().contains("default"))
         font = &g.fonts().get("default");
 
+#if SFML_VERSION_MAJOR >= 3
+    if (font)
+    {
+        title.emplace(*font, "Paused", 30);
+        title->setPosition({g.getWindow().getSize().x * 0.5f - 50.f, g.getWindow().getSize().y * 0.3f});
+    }
+#else
     if (font)
         title.setFont(*font);
     title.setString("Paused");
     title.setCharacterSize(30);
     title.setPosition({g.getWindow().getSize().x * 0.5f - 50.f, g.getWindow().getSize().y * 0.3f});
+#endif
 
     buttons.resize(3);
     float x = g.getWindow().getSize().x * 0.5f;
@@ -59,8 +67,13 @@ void PauseState::update(float)
 
 void PauseState::draw(sf::RenderTarget& target)
 {
+#if SFML_VERSION_MAJOR >= 3
+    if (title)
+        target.draw(*title);
+#else
     if (title.getFont())
         target.draw(title);
+#endif
     for (auto& b : buttons)
         b.draw(target);
 }

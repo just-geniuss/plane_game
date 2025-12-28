@@ -18,6 +18,14 @@ GameOverState::GameOverState(Game& g, int finalScore, HighScoreSystem scores)
     if (g.fonts().contains("default"))
         font = &g.fonts().get("default");
 
+#if SFML_VERSION_MAJOR >= 3
+    if (font)
+    {
+        title.emplace(*font, "Game Over", 32);
+        inputLabel.emplace(*font, "Enter your name (letters A-Z), press Enter to submit:", 20);
+        nameText.emplace(*font, nameBuffer, 28);
+    }
+#else
     if (font)
     {
         title.setFont(*font);
@@ -26,15 +34,21 @@ GameOverState::GameOverState(Game& g, int finalScore, HighScoreSystem scores)
     }
     title.setCharacterSize(32);
     title.setString("Game Over");
-    title.setPosition({40.f, 30.f});
-
     inputLabel.setCharacterSize(20);
-    inputLabel.setPosition({40.f, 80.f});
     inputLabel.setString("Enter your name (letters A-Z), press Enter to submit:");
-
     nameText.setCharacterSize(28);
-    nameText.setPosition({40.f, 110.f});
     nameText.setString(nameBuffer);
+#endif
+
+#if SFML_VERSION_MAJOR >= 3
+    if (title) title->setPosition({40.f, 30.f});
+    if (inputLabel) inputLabel->setPosition({40.f, 80.f});
+    if (nameText) nameText->setPosition({40.f, 110.f});
+#else
+    title.setPosition({40.f, 30.f});
+    inputLabel.setPosition({40.f, 80.f});
+    nameText.setPosition({40.f, 110.f});
+#endif
 
     backButton.setPosition({g.getWindow().getSize().x - 120.f, g.getWindow().getSize().y - 60.f});
     backButton.setSize({180.f, 44.f});
@@ -57,18 +71,18 @@ void GameOverState::handleEvent(const sf::Event& event)
             {
                 if (nameBuffer.size() < 8)
                     nameBuffer.push_back(static_cast<char>(uni));
-                nameText.setString(nameBuffer);
+                if (nameText) nameText->setString(nameBuffer);
             }
             else if (uni >= 'a' && uni <= 'z')
             {
                 if (nameBuffer.size() < 8)
                     nameBuffer.push_back(static_cast<char>(std::toupper(uni)));
-                nameText.setString(nameBuffer);
+                if (nameText) nameText->setString(nameBuffer);
             }
             else if (uni == 8 && !nameBuffer.empty())
             {
                 nameBuffer.pop_back();
-                nameText.setString(nameBuffer);
+                if (nameText) nameText->setString(nameBuffer);
             }
             else if (uni == 13 || uni == '\r')
             {
@@ -119,6 +133,15 @@ void GameOverState::update(float)
 
 void GameOverState::draw(sf::RenderTarget& target)
 {
+#if SFML_VERSION_MAJOR >= 3
+    if (title) target.draw(*title);
+    if (inputLabel) target.draw(*inputLabel);
+    if (nameText) target.draw(*nameText);
+    for (auto& r : rows)
+    {
+        target.draw(r);
+    }
+#else
     if (title.getFont())
         target.draw(title);
     if (inputLabel.getFont())
@@ -130,6 +153,7 @@ void GameOverState::draw(sf::RenderTarget& target)
         if (r.getFont())
             target.draw(r);
     }
+#endif
     backButton.draw(target);
 }
 
@@ -144,12 +168,21 @@ void GameOverState::refreshTable()
     int rank = 1;
     for (const auto& entry : highScores.entries())
     {
+#if SFML_VERSION_MAJOR >= 3
+        if (font)
+        {
+            sf::Text t(*font, std::to_string(rank) + ". " + entry.name + " - " + std::to_string(entry.score), 20);
+            t.setPosition({40.f, y});
+            rows.push_back(t);
+        }
+#else
         sf::Text t;
         if (font) t.setFont(*font);
         t.setCharacterSize(20);
         t.setPosition({40.f, y});
         t.setString(std::to_string(rank) + ". " + entry.name + " - " + std::to_string(entry.score));
         rows.push_back(t);
+#endif
         y += 28.f;
         ++rank;
     }
