@@ -18,7 +18,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            artifact_name: spaceshooter
+            archive_name: spaceshooter-linux.tar.gz
+          - os: macos-latest
+            platform: macos
+            artifact_name: spaceshooter
+            archive_name: spaceshooter-macos.tar.gz
+          - os: windows-latest
+            platform: windows
+            artifact_name: spaceshooter.exe
+            archive_name: spaceshooter-windows.zip
 
     steps:
       - name: Checkout
@@ -27,12 +39,19 @@ jobs:
       - name: Set up Ninja
         uses: seanmiddleditch/gha-setup-ninja@v4
 
+      - name: Clean build dir (Windows)
+        if: runner.os == 'Windows'
+        run: if (Test-Path "$env:BUILD_DIR") { Remove-Item -Recurse -Force "$env:BUILD_DIR" }
+
       - name: Clean build dir (POSIX)
+        if: runner.os != 'Windows'
         run: rm -rf "$BUILD_DIR"
 
       - name: Install SFML (Ubuntu)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libsfml-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsfml-dev libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev libgl1-mesa-dev
 
       - name: Install SFML (macOS)
         if: runner.os == 'macOS'
@@ -40,43 +59,75 @@ jobs:
           brew update
           brew install sfml@2
 
-      - name: Configure (Linux/macOS)
+      - name: Install SFML (Windows)
+        if: runner.os == 'Windows'
         run: |
-          if [ "$(uname)" = "Darwin" ]; then
-            PREFIX=$(brew --prefix sfml@2)
-            cmake -S . -B "$BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PREFIX"
-          else
-            cmake -S . -B "$BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Release
-          fi
+          vcpkg install sfml:x64-windows-static
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+          echo "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" >> $env:GITHUB_ENV
+
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S . -B "$BUILD_DIR" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_STATIC=ON \
+            -DCMAKE_EXE_LINKER_FLAGS="-static-libgcc -static-libstdc++"
+
+      - name: Configure (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          PREFIX=$(brew --prefix sfml@2)
+          cmake -S . -B "$BUILD_DIR" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_STATIC=ON \
+            -DCMAKE_PREFIX_PATH="$PREFIX"
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake -S . -B "$env:BUILD_DIR" -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_STATIC=ON `
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+            -DCMAKE_TOOLCHAIN_FILE="$env:CMAKE_TOOLCHAIN_FILE"
 
       - name: Build
+        if: runner.os == 'Windows'
+        run: cmake --build "$env:BUILD_DIR" --config Release
+
+      - name: Build
+        if: runner.os != 'Windows'
         run: cmake --build "$BUILD_DIR" --config Release
 
       - name: Package artifacts (Linux)
         if: runner.os == 'Linux'
         run: |
-          mkdir -p dist/linux
-          cp "$BUILD_DIR"/spaceshooter dist/linux/
-          cp /usr/lib/x86_64-linux-gnu/libsfml*.so* dist/linux/ || true
-          tar -C dist/linux -czf dist/spaceshooter-linux.tar.gz .
+          mkdir -p dist
+          cd "$BUILD_DIR"
+          tar -czf ../dist/${{ matrix.archive_name }} spaceshooter assets
 
       - name: Package artifacts (macOS)
         if: runner.os == 'macOS'
         run: |
-          mkdir -p dist/macos
-          cp "$BUILD_DIR"/spaceshooter dist/macos/
-          brew_prefix=$(brew --prefix sfml@2)
-          cp "$brew_prefix"/lib/libsfml*.dylib dist/macos/ || true
-          tar -C dist/macos -czf dist/spaceshooter-macos.tar.gz .
+          mkdir -p dist
+          cd "$BUILD_DIR"
+          tar -czf ../dist/${{ matrix.archive_name }} spaceshooter assets
 
-      - name: Upload artifact (tar)
+      - name: Package artifacts (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          Compress-Archive -Path "$env:BUILD_DIR\spaceshooter.exe", "$env:BUILD_DIR\assets" -DestinationPath "dist\${{ matrix.archive_name }}"
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: spaceshooter-${{ matrix.os }}
-          path: dist/*.tar.gz
+          name: spaceshooter-${{ matrix.platform }}
+          path: dist/${{ matrix.archive_name }}
 
       - name: Upload to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.tar.gz
+          files: dist/${{ matrix.archive_name }}
