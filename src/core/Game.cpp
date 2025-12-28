@@ -63,7 +63,7 @@ void Game::processEvents()
     while (auto ev = window.pollEvent())
     {
         const sf::Event& event = *ev;
-        if (std::holds_alternative<sf::Event::Closed>(event))
+        if (event.is<sf::Event::Closed>())
         {
             window.close();
         }

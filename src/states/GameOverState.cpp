@@ -48,11 +48,12 @@ GameOverState::GameOverState(Game& g, int finalScore, HighScoreSystem scores)
 void GameOverState::handleEvent(const sf::Event& event)
 {
     #if SFML_VERSION_MAJOR >= 3
-    if (auto txt = std::get_if<sf::Event::TextEntered>(&event))
+    if (event.is<sf::Event::TextEntered>())
     {
+        const auto& txt = event.get<sf::Event::TextEntered>();
         if (!submitted)
         {
-            auto uni = txt->unicode;
+            auto uni = txt.unicode;
             if (uni >= 'A' && uni <= 'Z')
             {
                 if (nameBuffer.size() < 8)

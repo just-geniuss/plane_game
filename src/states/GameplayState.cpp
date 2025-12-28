@@ -24,16 +24,17 @@ GameplayState::GameplayState(Game& g) : GameState(g)
 void GameplayState::handleEvent(const sf::Event& event)
 {
     #if SFML_VERSION_MAJOR >= 3
-    if (auto key = std::get_if<sf::Event::KeyPressed>(&event))
-    {
-        if (key->code == sf::Keyboard::Key::Escape)
-            game.stateStack().push<PauseState>();
-    }
+        if (event.is<sf::Event::KeyPressed>())
+        {
+            const auto& key = event.get<sf::Event::KeyPressed>();
+            if (key.code == sf::Keyboard::Key::Escape)
+                game.stateStack().push<PauseState>();
+        }
     #else
-    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
-    {
-        game.stateStack().push<PauseState>();
-    }
+        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+        {
+            game.stateStack().push<PauseState>();
+        }
     #endif
 }
 

@@ -38,19 +38,20 @@ void Button::setCallback(std::function<void()> cb)
 void Button::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
 {
     #if SFML_VERSION_MAJOR >= 3
-    if (auto mb = std::get_if<sf::Event::MouseButtonReleased>(&event))
-    {
-        if (mb->button == sf::Mouse::Button::Left)
+        if (event.is<sf::Event::MouseButtonReleased>())
         {
-            auto mouse = sf::Vector2f(sf::Mouse::getPosition(window));
-            if (box.getGlobalBounds().contains(mouse))
+            const auto& mb = event.get<sf::Event::MouseButtonReleased>();
+            if (mb.button == sf::Mouse::Button::Left)
             {
-                if (callback)
-                    callback();
+                auto mouse = sf::Vector2f(sf::Mouse::getPosition(window));
+                if (box.getGlobalBounds().contains(mouse))
+                {
+                    if (callback)
+                        callback();
+                }
             }
         }
-    }
-    #else
+        #else
     if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
     {
         auto mouse = sf::Vector2f(sf::Mouse::getPosition(window));
