@@ -1,0 +1,104 @@
+name: build-and-release
+
+on:
+  push:
+    branches: [ main ]
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: build-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v4
+
+      - name: Install SFML (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libsfml-dev
+
+      - name: Install SFML (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install sfml
+
+      - name: Install SFML (Windows via vcpkg)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
+          $env:VCPKG_ROOT\bootstrap-vcpkg.bat
+          $env:VCPKG_ROOT\vcpkg install sfml:x64-windows-static
+          echo "VCPKG_ROOT=$env:VCPKG_ROOT" >> $env:GITHUB_ENV
+
+      - name: Configure (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Package artifacts (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p dist/linux
+          cp build/spaceshooter dist/linux/
+          cp /usr/lib/x86_64-linux-gnu/libsfml*.so* dist/linux/ || true
+          tar -C dist/linux -czf dist/spaceshooter-linux.tar.gz .
+
+      - name: Package artifacts (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p dist/macos
+          cp build/spaceshooter dist/macos/
+          cp /opt/homebrew/lib/libsfml*.dylib dist/macos/ || true
+          tar -C dist/macos -czf dist/spaceshooter-macos.tar.gz .
+
+      - name: Package artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          mkdir dist
+          mkdir dist\windows
+          Copy-Item build\spaceshooter.exe dist\windows\
+          Copy-Item "$env:VCPKG_ROOT\installed\x64-windows-static\bin\*.dll" dist\windows\
+          Compress-Archive -Path dist\windows\* -DestinationPath dist\spaceshooter-windows.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spaceshooter-${{ matrix.os }}
+          path: dist/spaceshooter-windows.zip
+        if: runner.os == 'Windows'
+
+      - name: Upload artifact (tar)
+        uses: actions/upload-artifact@v4
+        with:
+          name: spaceshooter-${{ matrix.os }}
+          path: dist/*.tar.gz
+        if: runner.os != 'Windows'
+
+      - name: Upload to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.zip
+            dist/*.tar.gz
