@@ -10,6 +10,8 @@ jobs:
   build:
     name: build-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    env:
+      BUILD_DIR: build-${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -21,6 +23,16 @@ jobs:
 
       - name: Set up Ninja
         uses: seanmiddleditch/gha-setup-ninja@v4
+
+      - name: Clean build dir (POSIX)
+        if: runner.os != 'Windows'
+        run: rm -rf "$BUILD_DIR"
+
+      - name: Clean build dir (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (Test-Path "$env:BUILD_DIR") { Remove-Item "$env:BUILD_DIR" -Recurse -Force }
 
       - name: Install SFML (Ubuntu)
         if: runner.os == 'Linux'
@@ -36,30 +48,31 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          $env:VCPKG_ROOT = "$env:USERPROFILE\vcpkg"
           git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
-          $env:VCPKG_ROOT\bootstrap-vcpkg.bat
+          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
           $env:VCPKG_ROOT\vcpkg install sfml:x64-windows-static
           echo "VCPKG_ROOT=$env:VCPKG_ROOT" >> $env:GITHUB_ENV
 
       - name: Configure (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B "$BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
+          cmake -S . -B "$env:BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build "$BUILD_DIR" --config Release
 
       - name: Package artifacts (Linux)
         if: runner.os == 'Linux'
         run: |
           mkdir -p dist/linux
-          cp build/spaceshooter dist/linux/
+          cp "$BUILD_DIR"/spaceshooter dist/linux/
           cp /usr/lib/x86_64-linux-gnu/libsfml*.so* dist/linux/ || true
           tar -C dist/linux -czf dist/spaceshooter-linux.tar.gz .
 
@@ -67,7 +80,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           mkdir -p dist/macos
-          cp build/spaceshooter dist/macos/
+          cp "$BUILD_DIR"/spaceshooter dist/macos/
           cp /opt/homebrew/lib/libsfml*.dylib dist/macos/ || true
           tar -C dist/macos -czf dist/spaceshooter-macos.tar.gz .
 
@@ -77,7 +90,7 @@ jobs:
         run: |
           mkdir dist
           mkdir dist\windows
-          Copy-Item build\spaceshooter.exe dist\windows\
+          Copy-Item "$env:BUILD_DIR\spaceshooter.exe" dist\windows\
           Copy-Item "$env:VCPKG_ROOT\installed\x64-windows-static\bin\*.dll" dist\windows\
           Compress-Archive -Path dist\windows\* -DestinationPath dist\spaceshooter-windows.zip
 
