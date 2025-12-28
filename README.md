@@ -68,4 +68,6 @@ cmake --build build
 - sounds/music.ogg, sounds/fire.wav, sounds/explosion.wav
 - textures/player.png, enemy_*.png, bullet_*.png, background_*.png
 
-Код корректно запускается и без текстур/шрифтов (UI будет упрощён, в консоль выводится предупреждение).
+Код корректно запускается и без текстур/шрифтов (UI будет упрощён, в консоль выводится предупреждение). 
+
+Подгружены текстуры врагов. 
