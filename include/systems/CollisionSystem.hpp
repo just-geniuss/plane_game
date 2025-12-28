@@ -10,8 +10,8 @@ namespace CollisionSystem
         #if SFML_VERSION_MAJOR >= 3
                 const auto r1 = a.bounds();
                 const auto r2 = b.bounds();
-                return r1.left < r2.left + r2.width && r1.left + r1.width > r2.left &&
-                           r1.top < r2.top + r2.height && r1.top + r1.height > r2.top;
+        return r1.position.x < r2.position.x + r2.size.x && r1.position.x + r1.size.x > r2.position.x &&
+               r1.position.y < r2.position.y + r2.size.y && r1.position.y + r1.size.y > r2.position.y;
         #else
                 return a.bounds().intersects(b.bounds());
         #endif
@@ -21,8 +21,8 @@ namespace CollisionSystem
     {
         #if SFML_VERSION_MAJOR >= 3
                 const auto r2 = e.bounds();
-                return rect.left < r2.left + r2.width && rect.left + rect.width > r2.left &&
-                           rect.top < r2.top + r2.height && rect.top + rect.height > r2.top;
+        return rect.position.x < r2.position.x + r2.size.x && rect.position.x + rect.size.x > r2.position.x &&
+               rect.position.y < r2.position.y + r2.size.y && rect.position.y + rect.size.y > r2.position.y;
         #else
                 return rect.intersects(e.bounds());
         #endif
