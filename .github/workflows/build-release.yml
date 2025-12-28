@@ -42,7 +42,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew update
-          brew install sfml
+          brew install sfml@2
 
       - name: Install SFML (Windows via vcpkg)
         if: runner.os == 'Windows'
@@ -51,13 +51,19 @@ jobs:
           $env:VCPKG_ROOT = "$env:USERPROFILE\vcpkg"
           git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
           & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
-          $env:VCPKG_ROOT\vcpkg install sfml:x64-windows-static
-          echo "VCPKG_ROOT=$env:VCPKG_ROOT" >> $env:GITHUB_ENV
+          & "$env:VCPKG_ROOT\vcpkg.exe" install sfml:x64-windows-static
+          "VCPKG_ROOT=$env:VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "VCPKG_DEFAULT_TRIPLET=x64-windows-static" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Configure (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-          cmake -S . -B "$BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Release
+          if [ "$(uname)" = "Darwin" ]; then
+            PREFIX=$(brew --prefix sfml@2)
+            cmake -S . -B "$BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PREFIX"
+          else
+            cmake -S . -B "$BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Release
+          fi
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
@@ -81,7 +87,8 @@ jobs:
         run: |
           mkdir -p dist/macos
           cp "$BUILD_DIR"/spaceshooter dist/macos/
-          cp /opt/homebrew/lib/libsfml*.dylib dist/macos/ || true
+          brew_prefix=$(brew --prefix sfml@2)
+          cp "$brew_prefix"/lib/libsfml*.dylib dist/macos/ || true
           tar -C dist/macos -czf dist/spaceshooter-macos.tar.gz .
 
       - name: Package artifacts (Windows)
@@ -91,7 +98,9 @@ jobs:
           mkdir dist
           mkdir dist\windows
           Copy-Item "$env:BUILD_DIR\spaceshooter.exe" dist\windows\
-          Copy-Item "$env:VCPKG_ROOT\installed\x64-windows-static\bin\*.dll" dist\windows\
+          if (Test-Path "$env:VCPKG_ROOT\installed\x64-windows-static\bin") {
+            Copy-Item "$env:VCPKG_ROOT\installed\x64-windows-static\bin\*.dll" dist\windows\ -ErrorAction SilentlyContinue
+          }
           Compress-Archive -Path dist\windows\* -DestinationPath dist\spaceshooter-windows.zip
 
       - name: Upload artifact
