@@ -1,5 +1,13 @@
 #include "game/Enemy.hpp"
 
+#include <algorithm>
+#include <cstdlib>
+
+bool Enemy::texturesReady = false;
+sf::Texture Enemy::texture1;
+sf::Texture Enemy::texture2;
+sf::Texture Enemy::textureBoss;
+
 Enemy::Enemy(EnemyType t, const sf::Vector2f& pos) : enemyType(t)
 {
     position = pos;
@@ -34,24 +42,95 @@ Enemy::Enemy(EnemyType t, const sf::Vector2f& pos) : enemyType(t)
         shape.setFillColor(sf::Color(120, 40, 200));
         break;
     }
+    baseSize = size;
     shape.setSize(size);
     shape.setOrigin(size * 0.5f);
     shape.setPosition(position);
+
+    ensureTexturesLoaded();
+    setupSprite();
 }
 
 void Enemy::update(float dt)
 {
     fireTimer += dt;
     position += sf::Vector2f(0.f, speed * dt);
-    shape.setPosition(position);
+    if (textureLoaded)
+        sprite.setPosition(position);
+    else
+        shape.setPosition(position);
 }
 
 void Enemy::draw(sf::RenderTarget& target)
 {
-    target.draw(shape);
+    if (textureLoaded)
+        target.draw(sprite);
+    else
+        target.draw(shape);
 }
 
 void Enemy::damage(int amount)
 {
     hp -= amount;
+}
+
+void Enemy::ensureTexturesLoaded()
+{
+    if (texturesReady)
+        return;
+
+#if SFML_VERSION_MAJOR >= 3
+    const bool ok1 = texture1.openFromFile("assets/textures/enemy_1.png");
+    const bool ok2 = texture2.openFromFile("assets/textures/enemy_2.png");
+    const bool okBoss = textureBoss.openFromFile("assets/textures/enemy_boss.png");
+#else
+    const bool ok1 = texture1.loadFromFile("assets/textures/enemy_1.png");
+    const bool ok2 = texture2.loadFromFile("assets/textures/enemy_2.png");
+    const bool okBoss = textureBoss.loadFromFile("assets/textures/enemy_boss.png");
+#endif
+
+    texture1.setSmooth(true);
+    texture2.setSmooth(true);
+    textureBoss.setSmooth(true);
+
+    texturesReady = ok1 && ok2 && okBoss;
+}
+
+void Enemy::setupSprite()
+{
+    if (!texturesReady)
+        return;
+
+    const sf::Texture* chosen = nullptr;
+    if (enemyType == EnemyType::MiniBoss)
+    {
+        chosen = &textureBoss;
+    }
+    else
+    {
+        chosen = (std::rand() % 2 == 0) ? &texture1 : &texture2;
+    }
+
+    const auto texSize = chosen->getSize();
+    if (texSize.x == 0 || texSize.y == 0)
+        return;
+
+    sprite.setTexture(*chosen);
+
+    const float spriteScaleMultiplier = 2.5f; // enlarge visible sprite ~2.5x
+    const float hitboxScaleMultiplier = 1.5f; // enlarge collision box ~1.5x
+
+    const sf::Vector2f targetSize = baseSize * spriteScaleMultiplier;
+    const float scale = std::min(targetSize.x / static_cast<float>(texSize.x),
+                                 targetSize.y / static_cast<float>(texSize.y));
+    sprite.setScale(scale, scale);
+
+    const sf::FloatRect local = sprite.getLocalBounds();
+    size = baseSize * hitboxScaleMultiplier; // collision bounds
+    shape.setSize(size);
+    shape.setOrigin(size * 0.5f);
+
+    sprite.setOrigin(local.width * 0.5f, local.height * 0.5f);
+    sprite.setPosition(position);
+    textureLoaded = true;
 }

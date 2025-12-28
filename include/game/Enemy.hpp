@@ -27,10 +27,21 @@ public:
     void resetFire() { fireTimer = 0.f; }
 
 private:
+    void ensureTexturesLoaded();
+    void setupSprite();
+
     EnemyType enemyType{EnemyType::Basic};
     int hp{2};
     float speed{120.f};
     float fireCooldown{1.5f};
     float fireTimer{0.f};
+    sf::Vector2f baseSize{0.f, 0.f};
     sf::RectangleShape shape;
+    sf::Sprite sprite;
+    bool textureLoaded{false};
+
+    static bool texturesReady;
+    static sf::Texture texture1;
+    static sf::Texture texture2;
+    static sf::Texture textureBoss;
 };

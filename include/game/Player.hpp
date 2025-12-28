@@ -24,6 +24,9 @@ public:
 
 private:
     sf::RectangleShape shape;
+    sf::Texture texture;
+    sf::Sprite sprite;
+    bool textureLoaded{false};
     int hp{5};
     float speed{300.f};
     float fireCooldown{0.25f};
