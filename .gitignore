@@ -1,0 +1,36 @@
+# Build outputs
+/build/
+/dist/
+/build-*/
+CMakeFiles/
+CMakeCache.txt
+*.cmake
+*.o
+*.obj
+*.pdb
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+*.ninja
+build.ninja
+*.ilk
+*.manifest
+*.pch
+*.a
+*.lib
+*.exp
+*.idb
+*.pdb
+*.tar.gz
+*.zip
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
