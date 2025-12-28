@@ -1,0 +1,3 @@
+/Users/artempervyh/cpp_project_plane/build/CMakeFiles/spaceshooter.dir
+/Users/artempervyh/cpp_project_plane/build/CMakeFiles/edit_cache.dir
+/Users/artempervyh/cpp_project_plane/build/CMakeFiles/rebuild_cache.dir

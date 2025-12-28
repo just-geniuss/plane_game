@@ -1,0 +1,95 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonDir: '${{ github.workspace }}'
+          runVcpkgInstall: true
+          vcpkgArguments: 'sfml:x64-windows-static'
+      - name: Configure
+        run: |
+          cmake -S . -B build -G "Ninja" \
+            -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}\\scripts\\buildsystems\\vcpkg.cmake" \
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Package artifact
+        run: |
+          mkdir -p dist
+          copy build\Release\spaceshooter.exe dist\spaceshooter.exe
+        shell: pwsh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spaceshooter-windows
+          path: dist
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build git libx11-dev libxrandr-dev libxcursor-dev libxinerama-dev libudev-dev libgl1-mesa-dev libopenal-dev libflac-dev libvorbis-dev libfreetype6-dev libjpeg-dev libsndfile1-dev
+      - name: Build SFML static
+        run: |
+          git clone --depth 1 --branch 2.6.1 https://github.com/SFML/SFML.git /tmp/SFML
+          cmake -S /tmp/SFML -B /tmp/SFML/build -G Ninja \
+            -DBUILD_SHARED_LIBS=OFF -DSFML_BUILD_AUDIO=ON -DSFML_BUILD_GRAPHICS=ON -DSFML_BUILD_WINDOW=ON -DSFML_BUILD_SYSTEM=ON
+          cmake --build /tmp/SFML/build --config Release
+          cmake --install /tmp/SFML/build --prefix /tmp/sfml-static
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH=/tmp/sfml-static
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Package artifact
+        run: |
+          mkdir -p dist
+          cp build/spaceshooter dist/spaceshooter
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spaceshooter-linux
+          path: dist
+
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          brew update
+          brew install cmake ninja
+      - name: Build SFML static
+        run: |
+          git clone --depth 1 --branch 2.6.1 https://github.com/SFML/SFML.git /tmp/SFML
+          cmake -S /tmp/SFML -B /tmp/SFML/build -G Ninja \
+            -DBUILD_SHARED_LIBS=OFF -DSFML_BUILD_AUDIO=ON -DSFML_BUILD_GRAPHICS=ON -DSFML_BUILD_WINDOW=ON -DSFML_BUILD_SYSTEM=ON
+          cmake --build /tmp/SFML/build --config Release
+          cmake --install /tmp/SFML/build --prefix /tmp/sfml-static
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH=/tmp/sfml-static
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Package artifact
+        run: |
+          mkdir -p dist
+          cp build/spaceshooter dist/spaceshooter-macos
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spaceshooter-macos
+          path: dist
