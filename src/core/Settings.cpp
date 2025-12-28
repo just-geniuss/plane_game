@@ -8,9 +8,9 @@ namespace
 std::unordered_map<std::string, sf::Keyboard::Key> makeKeyLookup()
 {
     return {
-        {"A", sf::Keyboard::A}, {"D", sf::Keyboard::D}, {"W", sf::Keyboard::W}, {"S", sf::Keyboard::S},
-        {"Left", sf::Keyboard::Left}, {"Right", sf::Keyboard::Right}, {"Up", sf::Keyboard::Up}, {"Down", sf::Keyboard::Down},
-        {"Space", sf::Keyboard::Space}, {"Escape", sf::Keyboard::Escape}, {"Enter", sf::Keyboard::Enter},
+        {"A", sf::Keyboard::Key::A}, {"D", sf::Keyboard::Key::D}, {"W", sf::Keyboard::Key::W}, {"S", sf::Keyboard::Key::S},
+        {"Left", sf::Keyboard::Key::Left}, {"Right", sf::Keyboard::Key::Right}, {"Up", sf::Keyboard::Key::Up}, {"Down", sf::Keyboard::Key::Down},
+        {"Space", sf::Keyboard::Key::Space}, {"Escape", sf::Keyboard::Key::Escape}, {"Enter", sf::Keyboard::Key::Enter},
     };
 }
 

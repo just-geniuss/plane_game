@@ -1,6 +1,7 @@
 #include "core/Input.hpp"
 
 #include <algorithm>
+#include <variant>
 
 namespace
 {
@@ -27,6 +28,20 @@ void InputMapper::setBindings(const std::unordered_map<sf::Keyboard::Key, std::s
 
 void InputMapper::handleEvent(const sf::Event& event)
 {
+#if SFML_VERSION_MAJOR >= 3
+    if (auto pressed = std::get_if<sf::Event::KeyPressed>(&event))
+    {
+        auto it = bindings.find(pressed->code);
+        if (it != bindings.end())
+            activeActions[it->second] = true;
+    }
+    else if (auto released = std::get_if<sf::Event::KeyReleased>(&event))
+    {
+        auto it = bindings.find(released->code);
+        if (it != bindings.end())
+            activeActions.erase(it->second);
+    }
+#else
     if (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased)
     {
         auto it = bindings.find(event.key.code);
@@ -42,6 +57,7 @@ void InputMapper::handleEvent(const sf::Event& event)
             }
         }
     }
+#endif
 }
 
 void InputMapper::clearFrameState()

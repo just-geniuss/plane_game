@@ -1,6 +1,8 @@
 #include "core/Game.hpp"
 
 #include <iostream>
+#include <optional>
+#include <variant>
 
 #include "states/MainMenuState.hpp"
 
@@ -26,7 +28,11 @@ Game::Game() : states(*this)
     }
 
     // Prepare audio
+    #if SFML_VERSION_MAJOR >= 3
+    music.setLooping(true);
+    #else
     music.setLoop(true);
+    #endif
     if (music.openFromFile(MUSIC_PATH))
     {
         music.setVolume(config.musicVolume());
@@ -53,6 +59,18 @@ void Game::run()
 
 void Game::processEvents()
 {
+    #if SFML_VERSION_MAJOR >= 3
+    while (auto ev = window.pollEvent())
+    {
+        const sf::Event& event = *ev;
+        if (std::holds_alternative<sf::Event::Closed>(event))
+        {
+            window.close();
+        }
+        inputMapper.handleEvent(event);
+        states.handleEvent(event);
+    }
+    #else
     sf::Event event{};
     while (window.pollEvent(event))
     {
@@ -63,6 +81,7 @@ void Game::processEvents()
         inputMapper.handleEvent(event);
         states.handleEvent(event);
     }
+    #endif
 }
 
 void Game::update(float dt)
@@ -80,8 +99,13 @@ void Game::render()
 void Game::setupWindow()
 {
     const auto res = config.resolution();
+    #if SFML_VERSION_MAJOR >= 3
+    sf::VideoMode mode(sf::Vector2u(res.x, res.y));
+    auto style = sf::Style::Default;
+    #else
     sf::VideoMode mode(res.x, res.y);
     sf::Uint32 style = config.fullscreen() ? sf::Style::Fullscreen : sf::Style::Close;
+    #endif
     window.create(mode, "Space Shooter", style);
     window.setVerticalSyncEnabled(config.vsync());
     if (!config.fullscreen())
@@ -98,12 +122,12 @@ void Game::loadDefaults()
         config.setMaxFps(60);
         config.setMusicVolume(60.f);
         config.setSfxVolume(70.f);
-        config.setKeyBinding(sf::Keyboard::A, "MoveLeft");
-        config.setKeyBinding(sf::Keyboard::D, "MoveRight");
-        config.setKeyBinding(sf::Keyboard::W, "MoveUp");
-        config.setKeyBinding(sf::Keyboard::S, "MoveDown");
-        config.setKeyBinding(sf::Keyboard::Space, "Shoot");
-        config.setKeyBinding(sf::Keyboard::Escape, "Pause");
+        config.setKeyBinding(sf::Keyboard::Key::A, "MoveLeft");
+        config.setKeyBinding(sf::Keyboard::Key::D, "MoveRight");
+        config.setKeyBinding(sf::Keyboard::Key::W, "MoveUp");
+        config.setKeyBinding(sf::Keyboard::Key::S, "MoveDown");
+        config.setKeyBinding(sf::Keyboard::Key::Space, "Shoot");
+        config.setKeyBinding(sf::Keyboard::Key::Escape, "Pause");
         config.save(SETTINGS_PATH);
     }
 }

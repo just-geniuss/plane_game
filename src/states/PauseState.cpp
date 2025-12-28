@@ -4,6 +4,8 @@
 #include "states/SettingsState.hpp"
 #include "states/MainMenuState.hpp"
 
+#include <variant>
+
 PauseState::PauseState(Game& g) : GameState(g)
 {
     const sf::Font* font = nullptr;
@@ -37,10 +39,18 @@ void PauseState::handleEvent(const sf::Event& event)
 {
     for (auto& b : buttons)
         b.handleEvent(event, game.getWindow());
+#if SFML_VERSION_MAJOR >= 3
+    if (auto key = std::get_if<sf::Event::KeyPressed>(&event))
+    {
+        if (key->code == sf::Keyboard::Key::Escape)
+            game.stateStack().pop();
+    }
+#else
     if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
     {
         game.stateStack().pop();
     }
+#endif
 }
 
 void PauseState::update(float)

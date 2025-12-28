@@ -1,3 +1,5 @@
+[![build-and-release](https://github.com/just-geniuss/plane_game/actions/workflows/build-release.yml/badge.svg)](https://github.com/just-geniuss/plane_game/actions/workflows/build-release.yml)
+
 # Space Shooter (SFML)
 
 Небольшой вертикальный скролл‑шутер на C++17 и SFML 2.5+. Проект кроссплатформенный (Windows/Linux/macOS), включает главное меню, игру, паузу, настройки и таблицу рекордов.

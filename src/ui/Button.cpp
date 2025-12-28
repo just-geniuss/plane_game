@@ -1,5 +1,7 @@
 #include "ui/Button.hpp"
 
+#include <variant>
+
 Button::Button()
 {
     box.setSize({220.f, 44.f});
@@ -35,6 +37,20 @@ void Button::setCallback(std::function<void()> cb)
 
 void Button::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
 {
+    #if SFML_VERSION_MAJOR >= 3
+    if (auto mb = std::get_if<sf::Event::MouseButtonReleased>(&event))
+    {
+        if (mb->button == sf::Mouse::Button::Left)
+        {
+            auto mouse = sf::Vector2f(sf::Mouse::getPosition(window));
+            if (box.getGlobalBounds().contains(mouse))
+            {
+                if (callback)
+                    callback();
+            }
+        }
+    }
+    #else
     if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
     {
         auto mouse = sf::Vector2f(sf::Mouse::getPosition(window));
@@ -44,6 +60,7 @@ void Button::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
                 callback();
         }
     }
+    #endif
 }
 
 void Button::draw(sf::RenderTarget& target) const

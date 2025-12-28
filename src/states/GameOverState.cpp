@@ -4,6 +4,7 @@
 #include "states/MainMenuState.hpp"
 
 #include <cctype>
+#include <variant>
 
 namespace
 {
@@ -46,6 +47,40 @@ GameOverState::GameOverState(Game& g, int finalScore, HighScoreSystem scores)
 
 void GameOverState::handleEvent(const sf::Event& event)
 {
+    #if SFML_VERSION_MAJOR >= 3
+    if (auto txt = std::get_if<sf::Event::TextEntered>(&event))
+    {
+        if (!submitted)
+        {
+            auto uni = txt->unicode;
+            if (uni >= 'A' && uni <= 'Z')
+            {
+                if (nameBuffer.size() < 8)
+                    nameBuffer.push_back(static_cast<char>(uni));
+                nameText.setString(nameBuffer);
+            }
+            else if (uni >= 'a' && uni <= 'z')
+            {
+                if (nameBuffer.size() < 8)
+                    nameBuffer.push_back(static_cast<char>(std::toupper(uni)));
+                nameText.setString(nameBuffer);
+            }
+            else if (uni == 8 && !nameBuffer.empty())
+            {
+                nameBuffer.pop_back();
+                nameText.setString(nameBuffer);
+            }
+            else if (uni == 13 || uni == '\r')
+            {
+                submitted = true;
+                if (nameBuffer.empty()) nameBuffer = "AAA";
+                highScores.submit(nameBuffer, score);
+                highScores.save(HIGHSCORE_PATH);
+                refreshTable();
+            }
+        }
+    }
+    #else
     if (event.type == sf::Event::TextEntered && !submitted)
     {
         if (event.text.unicode >= 'A' && event.text.unicode <= 'Z')
@@ -74,6 +109,7 @@ void GameOverState::handleEvent(const sf::Event& event)
             refreshTable();
         }
     }
+    #endif
     backButton.handleEvent(event, game.getWindow());
 }
 

@@ -26,10 +26,17 @@ public:
     bool load(const std::string& id, const std::string& filename)
     {
         auto res = std::make_unique<Resource>();
+#if SFML_VERSION_MAJOR >= 3
+        if (!res->openFromFile(filename))
+        {
+            return false;
+        }
+#else
         if (!res->loadFromFile(filename))
         {
             return false;
         }
+#endif
         resources[id] = std::move(res);
         return true;
     }
