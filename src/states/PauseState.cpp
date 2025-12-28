@@ -40,10 +40,9 @@ void PauseState::handleEvent(const sf::Event& event)
     for (auto& b : buttons)
         b.handleEvent(event, game.getWindow());
 #if SFML_VERSION_MAJOR >= 3
-    if (event.is<sf::Event::KeyPressed>())
+    if (const auto* key = event.getIf<sf::Event::KeyPressed>())
     {
-        const auto& key = event.get<sf::Event::KeyPressed>();
-        if (key.code == sf::Keyboard::Key::Escape)
+        if (key->code == sf::Keyboard::Key::Escape)
             game.stateStack().pop();
     }
 #else

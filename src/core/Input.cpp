@@ -29,17 +29,15 @@ void InputMapper::setBindings(const std::unordered_map<sf::Keyboard::Key, std::s
 void InputMapper::handleEvent(const sf::Event& event)
 {
 #if SFML_VERSION_MAJOR >= 3
-    if (event.is<sf::Event::KeyPressed>())
+    if (const auto* k = event.getIf<sf::Event::KeyPressed>())
     {
-        const auto& k = event.get<sf::Event::KeyPressed>();
-        auto it = bindings.find(k.code);
+        auto it = bindings.find(k->code);
         if (it != bindings.end())
             activeActions[it->second] = true;
     }
-    else if (event.is<sf::Event::KeyReleased>())
+    else if (const auto* k = event.getIf<sf::Event::KeyReleased>())
     {
-        const auto& k = event.get<sf::Event::KeyReleased>();
-        auto it = bindings.find(k.code);
+        auto it = bindings.find(k->code);
         if (it != bindings.end())
             activeActions.erase(it->second);
     }

@@ -24,10 +24,9 @@ GameplayState::GameplayState(Game& g) : GameState(g)
 void GameplayState::handleEvent(const sf::Event& event)
 {
     #if SFML_VERSION_MAJOR >= 3
-        if (event.is<sf::Event::KeyPressed>())
+        if (const auto* key = event.getIf<sf::Event::KeyPressed>())
         {
-            const auto& key = event.get<sf::Event::KeyPressed>();
-            if (key.code == sf::Keyboard::Key::Escape)
+            if (key->code == sf::Keyboard::Key::Escape)
                 game.stateStack().push<PauseState>();
         }
     #else
